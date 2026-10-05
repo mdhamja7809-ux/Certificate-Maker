@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const lineBody2 = document.getElementById('lineBody2');
     const lineSig = document.getElementById('lineSig');
     const lineSigSub = document.getElementById('lineSigSub');
-    const skipHint = document.getElementById('skipHint');
 
     // Certificate Preview Elements
     const previewOrg = document.getElementById('previewOrg');
@@ -257,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         penContainer.style.transform = `translate(${pos.x - 27.5}px, ${pos.y - 83.6}px) rotate(${rotateDeg}deg)`;
     }
 
-    // Tap-to-skip / Finish Animation: Jump straight to final certificate
+    // Finish Animation: Transition to final certificate
     function finishAndShowCertificate() {
         if (!isAnimationActive) return;
         clearAnimationTimers();
@@ -270,15 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btnGenerate.disabled = false;
         btnGenerate.style.pointerEvents = '';
-    }
-
-    // Tap anywhere on stage to skip
-    if (animationView) {
-        animationView.addEventListener('click', () => {
-            if (isAnimationActive) {
-                finishAndShowCertificate();
-            }
-        });
     }
 
     // Start playful achievement animation

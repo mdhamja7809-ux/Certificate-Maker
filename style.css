@@ -414,7 +414,7 @@ body.keyboard-open #landing-view {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   min-height: 100dvh;
-  cursor: pointer; /* stage is tap-to-skip anywhere */
+  cursor: default;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
@@ -426,7 +426,7 @@ body.keyboard-open #landing-view {
   opacity: 1;
 }
 
-/* Stage container holding paper, pen, badge, skip-hint */
+/* Stage container holding paper, pen, badge */
 .achievement-stage {
   position: relative;
   width: min(440px, 92vw);
@@ -709,36 +709,6 @@ body.keyboard-open #landing-view {
 @keyframes glintSweep {
   0% { left: -130%; }
   100% { left: 160%; }
-}
-
-/* 6. Skip Hint */
-.skip-hint {
-  position: absolute;
-  bottom: -38px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #94a3b8;
-  font-family: var(--font-ui);
-  font-size: 0.82rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  cursor: pointer;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: color 0.2s, background-color 0.2s;
-  z-index: 12;
-}
-
-.skip-hint:hover {
-  color: #f1f5f9;
-  background: rgba(30, 41, 59, 0.85);
 }
 
 /* Slide up and fade in download button in result view */
@@ -1287,12 +1257,6 @@ body.keyboard-open #landing-view {
     top: -12px;
     padding: 5px 14px;
     font-size: 0.8rem;
-  }
-
-  .skip-hint {
-    bottom: -28px;
-    padding: 4px 10px;
-    font-size: 0.75rem;
   }
 }
 
