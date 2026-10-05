@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>সার্টিক্রাফট - আপনার সার্টিফিকেট গ্রহণ করুন</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Great+Vibes&family=Hind+Siliguri:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Libraries for exporting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- VIEW 1: Landing Page -->
+  <div id="landing-view" class="view active">
+    <div class="landing-card">
+      <div class="brand">
+        <img src="logo_icon.png" alt="লোগো" class="brand-icon">
+        <h1>সার্টিক্রাফট</h1>
+      </div>
+      <h2>আপনার <span class="text-accent">সার্টিফিকেট</span> গ্রহণ করুন</h2>
+      <p class="subtitle">আপনি সফলভাবে কোর্স সম্পন্ন করেছেন। আপনার অফিসিয়াল সার্টিফিকেট তৈরি করতে নিচে সম্পূর্ণ নাম লিখুন।</p>
+      
+      <div class="input-group">
+        <label for="recipientName">আপনার সম্পূর্ণ নাম</label>
+        <input type="text" id="recipientName" placeholder="যেমন: Amir Hamja" required autocomplete="name">
+        <div id="landing-error" class="error-msg"></div>
+      </div>
+      
+      <button id="btnGenerate" class="btn btn-cta btn-large">সার্টিফিকেট তৈরি করুন</button>
+    </div>
+  </div>
+
+  <!-- VIEW 2: Animation / Loading -->
+  <div id="animation-view" class="view">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <h2 id="loading-text">সার্টিফিকেট তৈরি করা হচ্ছে...</h2>
+      <p class="loading-subtext">অনুগ্রহ করে অপেক্ষা করুন, স্বাক্ষর ও সিলমোহর যুক্ত করা হচ্ছে।</p>
+    </div>
+  </div>
+
+  <!-- VIEW 3: Result / Download Page -->
+  <div id="result-view" class="view">
+    <header class="result-header">
+      <div class="brand">
+        <img src="logo_icon.png" alt="লোগো" class="brand-icon">
+        <h2>সার্টিক্রাফট</h2>
+      </div>
+      <div class="header-actions">
+        <button id="btnReset" class="btn btn-ghost">নতুন তৈরি করুন</button>
+      </div>
+    </header>
+
+    <main class="result-main">
+      <div class="success-banner">
+        <h2>🎉 অভিনন্দন! আপনার সার্টিফিকেট প্রস্তুত।</h2>
+        <p>নিচে আপনার সার্টিফিকেট দেখে নিন এবং সংরক্ষণের জন্য ডাউনলোড করুন।</p>
+      </div>
+
+      <div class="actions download-actions">
+        <button id="btnPng" class="btn btn-green btn-download">PNG ডাউনলোড</button>
+        <button id="btnPdf" class="btn btn-outline-accent btn-download">PDF ডাউনলোড</button>
+      </div>
+      <div id="export-msg" class="error-msg"></div>
+
+      <div class="preview-wrapper">
+        <div id="certificate" class="certificate">
+          <!-- Background borders fallback (if no bg image is used) -->
+          <div class="cert-border-outer"></div>
+          <div class="cert-border-inner"></div>
+
+          <div class="cert-content">
+            <div class="cert-header">
+              <h3 id="previewOrg"></h3>
+            </div>
+            
+            <div class="cert-title">
+              <h1>Certificate of Achievement</h1>
+            </div>
+            
+            <div class="cert-presented">
+              <p>This is proudly presented to</p>
+            </div>
+            
+            <div class="cert-recipient-container">
+              <h2 id="previewName"></h2>
+            </div>
+            
+            <div class="cert-course">
+              <h4 id="previewCourse"></h4>
+            </div>
+            
+            <div class="cert-desc">
+              <p id="previewDesc"></p>
+            </div>
+            
+            <div class="cert-footer">
+              <div class="footer-block">
+                <p id="previewDate" class="date-text"></p>
+                <div class="line"></div>
+                <p class="footer-label">Date</p>
+              </div>
+              
+              <div class="footer-seal">
+                <div class="seal-placeholder">SEAL</div>
+              </div>
+
+              <div class="footer-block">
+                <p id="previewSignature" class="signature-text"></p>
+                <div class="line"></div>
+                <p id="previewSignerName" class="signer-name"></p>
+                <p id="previewSignerTitle" class="signer-title"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
