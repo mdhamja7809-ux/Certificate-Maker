@@ -678,6 +678,95 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ----------------------------------------------------
+    // Messenger / In-App Browser Save Modal & Helpers
+    // ----------------------------------------------------
+    const saveModal = document.getElementById('save-modal');
+    const modalCertImage = document.getElementById('modalCertImage');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const btnModalShare = document.getElementById('btnModalShare');
+    const btnModalOpenChrome = document.getElementById('btnModalOpenChrome');
+    let currentCertBlob = null;
+    let currentCertFileName = 'certificate.png';
+
+    function openSaveModal(imgData, blob, fileName) {
+        currentCertBlob = blob;
+        currentCertFileName = fileName;
+        if (modalCertImage) {
+            modalCertImage.src = imgData;
+        }
+        if (saveModal) {
+            saveModal.classList.add('active');
+            saveModal.setAttribute('aria-hidden', 'false');
+        }
+    }
+
+    function closeSaveModal() {
+        if (saveModal) {
+            saveModal.classList.remove('active');
+            saveModal.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', closeSaveModal);
+    }
+
+    if (saveModal) {
+        saveModal.addEventListener('click', (e) => {
+            if (e.target === saveModal) {
+                closeSaveModal();
+            }
+        });
+    }
+
+    // Modal Share button: Re-trigger native share / save
+    if (btnModalShare) {
+        btnModalShare.addEventListener('click', async () => {
+            if (!currentCertBlob) return;
+            const file = new File([currentCertBlob], currentCertFileName, { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'সার্টিফিকেট',
+                        text: 'আমার সার্টিফিকেট'
+                    });
+                } catch (e) {
+                    if (e.name !== 'AbortError') {
+                        alert('আপনার ডিভাইসে সরাসরি শেয়ার সাপোর্ট করছে না। ছবির উপর চেপে ধরে Save image চাপুন।');
+                    }
+                }
+            } else {
+                alert('অনুগ্রহ করে ছবির উপর ২ সেকেন্ড চেপে ধরে (Long Press) "Save image" বা "Download image" চাপুন।');
+            }
+        });
+    }
+
+    // Modal Open in Chrome / Browser button
+    if (btnModalOpenChrome) {
+        btnModalOpenChrome.addEventListener('click', () => {
+            const currentUrl = window.location.href;
+            const isAndroid = /Android/i.test(navigator.userAgent || '');
+            if (isAndroid) {
+                // Try opening in Chrome directly via Android intent
+                const cleanUrl = currentUrl.replace(/^https?:\/\//i, '');
+                window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+            } else {
+                // On iOS / other, copy URL and prompt
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(currentUrl).then(() => {
+                        alert('লিংক কপি করা হয়েছে! Chrome বা Safari ব্রাউজারে পেস্ট করে খুলুন, অথবা উপরে ডানের ৩টি ডটে (⋮) চেপে "Open in Browser" সিলেক্ট করুন।');
+                    }).catch(() => {
+                        alert('উপরে ডানের ৩টি ডটে (⋮) চেপে "Open in Chrome" বা "Open in Safari" সিলেক্ট করুন।');
+                    });
+                } else {
+                    alert('উপরে ডানের ৩টি ডটে (⋮) চেপে "Open in Chrome" বা "Open in Safari" সিলেক্ট করুন।');
+                }
+            }
+        });
+    }
+
+    // ----------------------------------------------------
     // Export Logic (Image / PNG)
     // ----------------------------------------------------
     async function exportCertificate() {
@@ -721,12 +810,56 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Safe File Name (supports Latin and Bengali characters)
             const safeName = name.replace(/[^a-zA-Z0-9\u0980-\u09FF_-]/g, '_').toLowerCase();
-            const fileName = `certificate_${safeName}`;
+            const fileName = `certificate_${safeName}.png`;
 
-            const link = document.createElement('a');
-            link.download = `${fileName}.png`;
-            link.href = imgData;
-            link.click();
+            // Detect Messenger, Facebook, Instagram, or other in-app WebViews
+            const isMessengerOrIAB = /FBAN|FBAV|Messenger|FB_IAB|Instagram|Line|IAB/i.test(navigator.userAgent || '');
+
+            // Convert canvas to Blob for modern Web Share API & Files
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    exportMsg.textContent = 'ছবি তৈরিতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+                    return;
+                }
+
+                const file = new File([blob], fileName, { type: 'image/png' });
+
+                // Option A: Try native Web Share API (Save to Gallery / Photos)
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'সার্টিফিকেট',
+                            text: 'সার্টিক্রাফট সার্টিফিকেট'
+                        });
+                        return; // Successfully presented native save/share sheet
+                    } catch (shareErr) {
+                        if (shareErr.name === 'AbortError') {
+                            // User simply closed the share sheet
+                            return;
+                        }
+                    }
+                }
+
+                // Option B: If inside Messenger / In-App Browser, direct <a download> is blocked by WebView
+                if (isMessengerOrIAB) {
+                    openSaveModal(imgData, blob, fileName);
+                    return;
+                }
+
+                // Option C: Regular Desktop or standard Mobile Browser (Chrome/Safari/Firefox)
+                try {
+                    const link = document.createElement('a');
+                    link.download = fileName;
+                    link.href = imgData;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (dlErr) {
+                    openSaveModal(imgData, blob, fileName);
+                }
+            }, 'image/png');
+
         } catch (err) {
             console.error("Export Error: ", err);
             exportMsg.textContent = 'সার্টিফিকেট ডাউনলোড করার সময় একটি সমস্যা হয়েছে।';

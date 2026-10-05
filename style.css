@@ -1315,9 +1315,185 @@ body.keyboard-open #landing-view {
   .achievement-badge,
   .sparkle,
   .paper-glint,
-  .download-actions {
+  .download-actions,
+  .modal-card {
     transition-duration: 0.01ms !important;
     transition-delay: 0s !important;
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ==================================
+   Save Modal (Messenger / In-App Browser)
+   ================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.modal-card {
+  position: relative;
+  background: var(--white);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.92) translateY(20px);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modal-backdrop.active .modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title .modal-icon {
+  font-size: 1.35rem;
+}
+
+.modal-title h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.btn-close-modal:hover {
+  color: var(--text);
+  background-color: var(--bg);
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.messenger-tip {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.tip-badge {
+  display: inline-block;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.messenger-tip p {
+  color: #1e3a8a;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modal-image-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.modal-cert-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: auto;
+  -webkit-user-select: auto;
+  -webkit-touch-callout: default; /* allows iOS Safari / Messenger image hold save */
+}
+
+.longpress-indicator {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.82);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  animation: pulseIndicator 2s infinite;
+}
+
+@keyframes pulseIndicator {
+  0%, 100% { opacity: 0.9; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.65; transform: translateX(-50%) scale(0.97); }
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-btn {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+}
+

@@ -206,6 +206,42 @@
     </main>
   </div>
 
+  <!-- Messenger & In-App Browser Save Modal -->
+  <div id="save-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span class="modal-icon">📲</span>
+          <h3>ছবি সেভ করার উপায়</h3>
+        </div>
+        <button id="btnCloseModal" class="btn-close-modal" aria-label="Close">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="messenger-tip">
+          <div class="tip-badge">মেসেঞ্জার ব্যবহারকারীদের জন্য</div>
+          <p>মেসেঞ্জারের নিজস্ব ব্রাউজারে সরাসরি ডাউনলোড ফাইল তৈরি সীমাবদ্ধ থাকে। নিচের ছবির উপর ২ সেকেন্ড <strong>চেপে ধরে রাখুন (Long Press)</strong> এবং <strong>"Save image"</strong> বা <strong>"Download image"</strong> চাপুন।</p>
+        </div>
+
+        <div class="modal-image-wrapper">
+          <img id="modalCertImage" src="" alt="আপনার সার্টিফিকেট" class="modal-cert-img">
+          <div class="longpress-indicator">
+            <span>👆 ছবির উপর চেপে ধরে রাখুন (Hold to Save)</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btnModalShare" class="btn btn-green modal-btn">
+            <span>📤 গ্যালারিতে সেভ / শেয়ার করুন</span>
+          </button>
+          <button id="btnModalOpenChrome" class="btn btn-outline-accent modal-btn">
+            <span>🌐 Chrome / ব্রাউজারে খুলুন</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
