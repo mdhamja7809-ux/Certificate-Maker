@@ -187,6 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
         clearAnimationTimers();
         isAnimationActive = false;
         
+        // Reset overlay classes
+        if (animationView) {
+            animationView.classList.remove('active', 'fade-out');
+        }
+
         // Reset element styles and classes
         if (paperSheet) {
             paperSheet.classList.remove('float-in', 'stamp-impact', 'transform-out');
@@ -256,14 +261,18 @@ document.addEventListener('DOMContentLoaded', () => {
         penContainer.style.transform = `translate(${pos.x - 27.5}px, ${pos.y - 83.6}px) rotate(${rotateDeg}deg)`;
     }
 
-    // Finish Animation: Transition to final certificate
+    // Finish Animation: Transition cleanly to final certificate
     function finishAndShowCertificate() {
-        if (!isAnimationActive) return;
         clearAnimationTimers();
         isAnimationActive = false;
 
-        // Transition immediately to result view
-        showView(resultView);
+        // Transition immediately to result view without flicker
+        resultView.classList.add('active');
+        landingView.classList.remove('active');
+        if (animationView) {
+            animationView.classList.remove('active', 'fade-out');
+        }
+
         adjustNameSize();
         scaleCertificate();
 
@@ -506,24 +515,39 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 3000));
 
-        // Sequence Step 7: Transform and reveal (3.6s - 4.1s)
+        // Sequence Step 7: Seamless morph & cross-fade into Real Certificate (3.55s - 4.20s)
         // Soft glint sweep across paper
         animTimeouts.push(setTimeout(() => {
             if (!isAnimationActive) return;
             paperGlint.classList.add('sweep');
         }, 3550));
 
-        // Paper scales up and cross-fades
+        // Seamless Cross-fade: Activate resultView underneath, pre-scale certificate, and dissolve overlay
         animTimeouts.push(setTimeout(() => {
             if (!isAnimationActive) return;
-            paperSheet.classList.add('transform-out');
-        }, 3750));
 
-        // Complete: Transition to Real Certificate
-        animTimeouts.push(setTimeout(() => {
-            if (!isAnimationActive) return;
-            finishAndShowCertificate();
-        }, 4050));
+            // 1. Activate result view behind the fixed animation view (zero white flash)
+            resultView.classList.add('active');
+            landingView.classList.remove('active');
+
+            // 2. Compute final certificate layout while still covered
+            adjustNameSize();
+            scaleCertificate();
+
+            // 3. Bloom paper slightly and dissolve the animation overlay seamlessly
+            paperSheet.classList.add('transform-out');
+            animationView.classList.add('fade-out');
+
+            // 4. Once the 420ms fade-out finishes, cleanly clean up animation overlay
+            animTimeouts.push(setTimeout(() => {
+                if (!isAnimationActive) return;
+                animationView.classList.remove('active', 'fade-out');
+                isAnimationActive = false;
+                clearAnimationTimers();
+                btnGenerate.disabled = false;
+                btnGenerate.style.pointerEvents = '';
+            }, 440));
+        }, 3750));
     }
 
     // Generate Click
