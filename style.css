@@ -403,57 +403,358 @@ body.keyboard-open #landing-view {
 
 
 /* ==================================
-   5. Loading screen
+   5. Playful Achievement Animation
    ================================== */
 #animation-view {
+  position: relative;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: var(--bg);
+  background-color: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  min-height: 100dvh;
+  cursor: pointer; /* stage is tap-to-skip anywhere */
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.35s ease;
 }
 
-.loading-card {
-  text-align: center;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 40px 32px;
-  max-width: 420px;
+#animation-view.active {
+  opacity: 1;
+}
+
+/* Stage container holding paper, pen, badge, skip-hint */
+.achievement-stage {
+  position: relative;
+  width: min(440px, 92vw);
+  height: min(290px, 60vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+
+/* 1. Blank Cream Paper Sheet */
+.paper-sheet {
+  position: relative;
   width: 100%;
+  max-width: 400px;
+  aspect-ratio: 400 / 250;
+  background: #fffdf9;
+  border-radius: 10px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45),
+              0 0 0 1px rgba(212, 175, 55, 0.3),
+              0 0 35px rgba(245, 158, 11, 0.12);
+  overflow: hidden;
+  will-change: transform, opacity;
+  transform: translateY(40px) scale(0.85) rotateX(12deg);
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.4s ease;
 }
 
-.spinner {
-  width: 56px;
-  height: 56px;
-  border: 5px solid var(--accent-soft);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.9s infinite linear;
-  margin: 0 auto 24px;
+/* Floats up into exact center */
+.paper-sheet.float-in {
+  transform: translateY(0) scale(1) rotateX(0deg);
+  opacity: 1;
 }
 
-@keyframes spin {
-  100% { transform: rotate(360deg); }
+/* Micro-impact shake when seal hits */
+.paper-sheet.stamp-impact {
+  animation: paperImpactShake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-#loading-text {
-  font-size: 1.25rem;
+@keyframes paperImpactShake {
+  0% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(4px) scale(0.985); }
+  50% { transform: translateY(-2px) scale(1.008); }
+  75% { transform: translateY(1px) scale(0.998); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* Transform out into real certificate */
+.paper-sheet.transform-out {
+  transform: scale(1.06);
+  opacity: 0;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.35s ease;
+}
+
+/* Paper SVG & Lines */
+.paper-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.paper-border-outer {
+  fill: none;
+  stroke: #d4af37;
+  stroke-width: 2;
+  opacity: 0.85;
+}
+
+.paper-border-inner {
+  fill: none;
+  stroke: #e2c269;
+  stroke-width: 0.9;
+  opacity: 0.65;
+  stroke-dasharray: 4, 3;
+}
+
+.drawn-icon {
+  fill: none;
+  stroke: #cbd5e1;
+  stroke-width: 1.5;
+  opacity: 0;
+  transform-origin: 200px 38px;
+  transform: scale(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+
+.drawn-icon.drawn {
+  opacity: 0.7;
+  transform: scale(1);
+}
+
+.drawn-line {
+  stroke: #cbd5e1;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+/* Ink path (flowing signature) */
+.ink-path {
+  fill: none;
+  stroke: #1e3a8a;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 1px rgba(30, 58, 138, 0.3));
+}
+
+/* Gold Wax Seal */
+.gold-seal {
+  transform-origin: 78px 165px;
+  opacity: 0;
+  transform: scale(1.7);
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.15s ease;
+}
+
+.gold-seal.stamped {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.seal-base {
+  fill: #f59e0b;
+  stroke: #d97706;
+  stroke-width: 2;
+  filter: drop-shadow(0 4px 6px rgba(180, 83, 9, 0.4));
+}
+
+.seal-ring {
+  fill: none;
+  stroke: #fef3c7;
+  stroke-width: 1.2;
+  stroke-dasharray: 2, 2;
+}
+
+.seal-star {
+  fill: #fffbeb;
+}
+
+.seal-ribbon {
+  fill: #b45309;
+  opacity: 0.9;
+}
+
+/* Expanding ripple ring behind seal */
+.seal-ripple {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 3;
+  transform-origin: 78px 165px;
+  opacity: 0;
+  transform: scale(0.6);
+  pointer-events: none;
+}
+
+.seal-ripple.active {
+  animation: rippleRing 0.45s ease-out forwards;
+}
+
+@keyframes rippleRing {
+  0% { transform: scale(0.6); opacity: 0.9; stroke-width: 3; }
+  100% { transform: scale(2.2); opacity: 0; stroke-width: 0.5; }
+}
+
+/* 2. Fountain Pen */
+.pen-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 55px;
+  height: 88px;
+  pointer-events: none;
+  z-index: 10;
+  transform-origin: 27.5px 83.6px;
+  opacity: 0;
+  will-change: transform, opacity;
+  filter: drop-shadow(5px 12px 10px rgba(0, 0, 0, 0.28));
+  transition: opacity 0.2s ease;
+}
+
+.fountain-pen {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 3. Achievement Badge */
+.achievement-badge {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translate(-50%, -20px) scale(0.7);
+  opacity: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.45), 0 0 0 2px rgba(254, 243, 199, 0.35);
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
   font-weight: 700;
-  color: var(--text);
-  margin-bottom: 8px;
-  animation: pulse 1.5s infinite;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.25s ease;
 }
 
-.loading-subtext {
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
+.achievement-badge.badge-visible {
+  transform: translate(-50%, 0) scale(1);
+  opacity: 1;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.achievement-badge .badge-icon {
+  font-size: 1.15rem;
+}
+
+/* 4. Sparkles around paper */
+.sparkles-container {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 8;
+}
+
+.sparkle {
+  position: absolute;
+  color: #fbbf24;
+  font-size: 1.3rem;
+  opacity: 0;
+  transform: scale(0);
+  will-change: transform, opacity;
+}
+
+.sp-1 { top: -10px; left: 18%; }
+.sp-2 { top: -15px; right: 22%; }
+.sp-3 { top: 40%; left: -16px; }
+.sp-4 { top: 45%; right: -16px; }
+.sp-5 { bottom: -12px; left: 15%; }
+.sp-6 { bottom: -15px; right: 18%; }
+
+.sparkles-container.sparkles-active .sp-1 { animation: sparklePop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.0s forwards; }
+.sparkles-container.sparkles-active .sp-2 { animation: sparklePop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s forwards; }
+.sparkles-container.sparkles-active .sp-3 { animation: sparklePop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.04s forwards; }
+.sparkles-container.sparkles-active .sp-4 { animation: sparklePop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.12s forwards; }
+.sparkles-container.sparkles-active .sp-5 { animation: sparklePop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.06s forwards; }
+.sparkles-container.sparkles-active .sp-6 { animation: sparklePop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.10s forwards; }
+
+@keyframes sparklePop {
+  0% { transform: scale(0) rotate(-25deg); opacity: 0; }
+  50% { transform: scale(1.35) rotate(15deg); opacity: 1; }
+  100% { transform: scale(0.9) rotate(0deg); opacity: 0.85; }
+}
+
+/* 5. Paper Light Glint Sweep */
+.paper-glint {
+  position: absolute;
+  top: 0;
+  left: -130%;
+  width: 65%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  transform: skewX(-25deg);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.paper-glint.sweep {
+  animation: glintSweep 0.5s ease-out forwards;
+}
+
+@keyframes glintSweep {
+  0% { left: -130%; }
+  100% { left: 160%; }
+}
+
+/* 6. Skip Hint */
+.skip-hint {
+  position: absolute;
+  bottom: -38px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #94a3b8;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s, background-color 0.2s;
+  z-index: 12;
+}
+
+.skip-hint:hover {
+  color: #f1f5f9;
+  background: rgba(30, 41, 59, 0.85);
+}
+
+/* Slide up and fade in download button in result view */
+#result-view.active .download-actions {
+  animation: slideUpActions 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slideUpActions {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
@@ -976,6 +1277,23 @@ body.keyboard-open #landing-view {
     flex: 1;
     min-height: 44px;
   }
+
+  .achievement-stage {
+    height: 75vh;
+    width: min(400px, 70vw);
+  }
+
+  .achievement-badge {
+    top: -12px;
+    padding: 5px 14px;
+    font-size: 0.8rem;
+  }
+
+  .skip-hint {
+    bottom: -28px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
 }
 
 /* ==================================
@@ -989,7 +1307,15 @@ body.keyboard-open #landing-view {
   .input-group,
   .landing-card .btn-cta,
   #landing-view,
-  #landing-view::before {
+  #landing-view::before,
+  .paper-sheet,
+  .pen-container,
+  .gold-seal,
+  .seal-ripple,
+  .achievement-badge,
+  .sparkle,
+  .paper-glint,
+  .download-actions {
     transition-duration: 0.01ms !important;
     transition-delay: 0s !important;
     animation-duration: 0.01ms !important;

@@ -12,8 +12,9 @@
   
   <link rel="stylesheet" href="style.css">
   
-  <!-- Libraries for exporting -->
+  <!-- Libraries for exporting & effects -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
@@ -37,12 +38,93 @@
     </div>
   </div>
 
-  <!-- VIEW 2: Animation / Loading -->
+  <!-- VIEW 2: Playful Achievement Animation -->
   <div id="animation-view" class="view">
-    <div class="loading-card">
-      <div class="spinner"></div>
-      <h2 id="loading-text">সার্টিফিকেট তৈরি করা হচ্ছে...</h2>
-      <p class="loading-subtext">অনুগ্রহ করে অপেক্ষা করুন, স্বাক্ষর ও সিলমোহর যুক্ত করা হচ্ছে।</p>
+    <div class="achievement-stage" id="achievementStage">
+      <!-- Skip hint (tap anywhere on stage to skip) -->
+      <div class="skip-hint" id="skipHint">ট্যাপ করে স্কিপ করুন <span>⏩</span></div>
+
+      <!-- Achievement Unlocked Badge -->
+      <div class="achievement-badge" id="achievementBadge">
+        <span class="badge-icon">🏆</span>
+        <span class="badge-text">Certificate Ready!</span>
+      </div>
+
+      <!-- Blank Cream Paper Sheet -->
+      <div class="paper-sheet" id="paperSheet">
+        <div class="paper-glint" id="paperGlint"></div>
+        <svg class="paper-svg" id="paperSvg" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer and Inner Certificate Borders -->
+          <rect x="12" y="12" width="376" height="226" rx="6" class="paper-border-outer"/>
+          <rect x="18" y="18" width="364" height="214" rx="4" class="paper-border-inner"/>
+
+          <!-- Header badge / icon -->
+          <circle cx="200" cy="38" r="9" class="drawn-icon"/>
+
+          <!-- Drawn placeholder lines -->
+          <line x1="130" y1="56" x2="270" y2="56" class="drawn-line line-title" id="lineTitle"/>
+          <line x1="160" y1="70" x2="240" y2="70" class="drawn-line line-sub" id="lineSub"/>
+
+          <!-- Body placeholder lines -->
+          <line x1="100" y1="104" x2="300" y2="104" class="drawn-line line-body-1" id="lineBody1"/>
+          <line x1="125" y1="118" x2="275" y2="118" class="drawn-line line-body-2" id="lineBody2"/>
+
+          <!-- Signature line -->
+          <line x1="220" y1="184" x2="330" y2="184" class="drawn-line line-sig" id="lineSig"/>
+          <line x1="245" y1="194" x2="305" y2="194" class="drawn-line line-sig-sub" id="lineSigSub"/>
+
+          <!-- Cursive Signature Ink Path -->
+          <path id="signaturePath" class="ink-path" d="M 230 174 C 240 158, 248 152, 255 170 C 262 182, 270 156, 280 168 C 290 178, 298 160, 310 172 C 322 182, 260 185, 230 183 C 270 183, 315 181, 335 182"/>
+
+          <!-- Seal Impact Ripple Ring -->
+          <circle id="sealRipple" class="seal-ripple" cx="78" cy="165" r="22"/>
+
+          <!-- Gold Wax Seal Stamp -->
+          <g id="goldSeal" class="gold-seal">
+            <circle cx="78" cy="165" r="25" class="seal-base"/>
+            <circle cx="78" cy="165" r="21" class="seal-ring"/>
+            <polygon points="78,152 81.5,160.5 90,162 83.5,168 85.5,176.5 78,172 70.5,176.5 72.5,168 66,162 74.5,160.5" class="seal-star"/>
+            <path d="M 70 186 L 64 205 L 73 199 L 78 205 L 76 188" class="seal-ribbon"/>
+          </g>
+        </svg>
+
+        <!-- Sparkles Container -->
+        <div class="sparkles-container" id="sparklesContainer">
+          <span class="sparkle sp-1">✦</span>
+          <span class="sparkle sp-2">★</span>
+          <span class="sparkle sp-3">✦</span>
+          <span class="sparkle sp-4">★</span>
+          <span class="sparkle sp-5">✦</span>
+          <span class="sparkle sp-6">★</span>
+        </div>
+      </div>
+
+      <!-- Fountain Pen (Inline SVG) -->
+      <div class="pen-container" id="penContainer">
+        <svg class="fountain-pen" viewBox="0 0 100 160" width="55" height="88" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="penBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#1e293b"/>
+              <stop offset="45%" stop-color="#334155"/>
+              <stop offset="75%" stop-color="#1e293b"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </linearGradient>
+            <linearGradient id="penGoldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#f59e0b"/>
+              <stop offset="50%" stop-color="#fde68a"/>
+              <stop offset="100%" stop-color="#d97706"/>
+            </linearGradient>
+          </defs>
+          <path d="M 38 12 L 62 12 L 60 72 L 40 72 Z" fill="url(#penBodyGrad)"/>
+          <rect x="37" y="72" width="26" height="5" rx="1" fill="url(#penGoldGrad)"/>
+          <path d="M 40 77 L 60 77 L 55 106 L 45 106 Z" fill="#0f172a"/>
+          <rect x="44" y="106" width="12" height="3" fill="url(#penGoldGrad)"/>
+          <path d="M 45 109 L 55 109 L 53 138 L 50 152 L 47 138 Z" fill="url(#penGoldGrad)" stroke="#b45309" stroke-width="0.8"/>
+          <circle cx="50" cy="128" r="1.3" fill="#78350f"/>
+          <line x1="50" y1="129.3" x2="50" y2="152" stroke="#78350f" stroke-width="0.9"/>
+          <rect x="47" y="14" width="6" height="32" rx="2" fill="url(#penGoldGrad)"/>
+        </svg>
+      </div>
     </div>
   </div>
 

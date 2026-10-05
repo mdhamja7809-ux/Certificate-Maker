@@ -25,7 +25,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPng = document.getElementById('btnPng');
     const landingError = document.getElementById('landing-error');
     const exportMsg = document.getElementById('export-msg');
-    const loadingText = document.getElementById('loading-text');
+
+    // Achievement Animation Elements
+    const achievementStage = document.getElementById('achievementStage');
+    const paperSheet = document.getElementById('paperSheet');
+    const paperSvg = document.getElementById('paperSvg');
+    const paperGlint = document.getElementById('paperGlint');
+    const penContainer = document.getElementById('penContainer');
+    const signaturePath = document.getElementById('signaturePath');
+    const goldSeal = document.getElementById('goldSeal');
+    const sealRipple = document.getElementById('sealRipple');
+    const achievementBadge = document.getElementById('achievementBadge');
+    const sparklesContainer = document.getElementById('sparklesContainer');
+    const lineTitle = document.getElementById('lineTitle');
+    const lineSub = document.getElementById('lineSub');
+    const lineBody1 = document.getElementById('lineBody1');
+    const lineBody2 = document.getElementById('lineBody2');
+    const lineSig = document.getElementById('lineSig');
+    const lineSigSub = document.getElementById('lineSigSub');
+    const skipHint = document.getElementById('skipHint');
 
     // Certificate Preview Elements
     const previewOrg = document.getElementById('previewOrg');
@@ -149,6 +167,375 @@ document.addEventListener('DOMContentLoaded', () => {
         viewElement.classList.add('active');
     }
 
+    // ----------------------------------------------------
+    // Playful Achievement Animation Controller
+    // ----------------------------------------------------
+    let animFrameId = null;
+    let animTimeouts = [];
+    let isCertReady = false;
+    let isAnimationActive = false;
+
+    function clearAnimationTimers() {
+        if (animFrameId) {
+            cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+        }
+        animTimeouts.forEach(t => clearTimeout(t));
+        animTimeouts = [];
+    }
+
+    function resetAchievementStage() {
+        clearAnimationTimers();
+        isAnimationActive = false;
+        
+        // Reset element styles and classes
+        if (paperSheet) {
+            paperSheet.classList.remove('float-in', 'stamp-impact', 'transform-out');
+        }
+        if (goldSeal) {
+            goldSeal.classList.remove('stamped');
+        }
+        if (sealRipple) {
+            sealRipple.classList.remove('active');
+        }
+        if (achievementBadge) {
+            achievementBadge.classList.remove('badge-visible');
+        }
+        if (sparklesContainer) {
+            sparklesContainer.classList.remove('sparkles-active');
+        }
+        if (paperGlint) {
+            paperGlint.classList.remove('sweep');
+        }
+        if (penContainer) {
+            penContainer.style.opacity = '0';
+            penContainer.style.transform = 'translate(-100px, -100px)';
+        }
+
+        // Reset drawn SVG lines
+        if (signaturePath) {
+            const pathLen = signaturePath.getTotalLength ? signaturePath.getTotalLength() : 250;
+            signaturePath.style.strokeDasharray = `${pathLen}`;
+            signaturePath.style.strokeDashoffset = `${pathLen}`;
+        }
+        if (lineTitle) {
+            lineTitle.style.strokeDasharray = '140';
+            lineTitle.style.strokeDashoffset = '140';
+        }
+        if (lineSub) {
+            lineSub.style.strokeDasharray = '80';
+            lineSub.style.strokeDashoffset = '80';
+        }
+        if (lineBody1) lineBody1.style.opacity = '0';
+        if (lineBody2) lineBody2.style.opacity = '0';
+        if (lineSig) lineSig.style.opacity = '0';
+        if (lineSigSub) lineSigSub.style.opacity = '0';
+        
+        const drawnIcon = document.querySelector('.drawn-icon');
+        if (drawnIcon) drawnIcon.classList.remove('drawn');
+    }
+
+    // Helper: Map SVG coordinate (400x250) to Stage container pixels
+    function getStageCoordinates(svgX, svgY) {
+        if (!paperSvg || !achievementStage) return { x: 0, y: 0 };
+        const stageRect = achievementStage.getBoundingClientRect();
+        const paperRect = paperSvg.getBoundingClientRect();
+        
+        const scaleX = paperRect.width / 400;
+        const scaleY = paperRect.height / 250;
+        
+        const posX = (paperRect.left - stageRect.left) + (svgX * scaleX);
+        const posY = (paperRect.top - stageRect.top) + (svgY * scaleY);
+        
+        return { x: posX, y: posY };
+    }
+
+    // Helper: Position pen nib tip (nib tip is at 27.5px, 83.6px inside pen container)
+    function setPenPosition(svgX, svgY, rotateDeg = -16) {
+        if (!penContainer) return;
+        const pos = getStageCoordinates(svgX, svgY);
+        penContainer.style.transform = `translate(${pos.x - 27.5}px, ${pos.y - 83.6}px) rotate(${rotateDeg}deg)`;
+    }
+
+    // Tap-to-skip / Finish Animation: Jump straight to final certificate
+    function finishAndShowCertificate() {
+        if (!isAnimationActive) return;
+        clearAnimationTimers();
+        isAnimationActive = false;
+
+        // Transition immediately to result view
+        showView(resultView);
+        adjustNameSize();
+        scaleCertificate();
+
+        btnGenerate.disabled = false;
+        btnGenerate.style.pointerEvents = '';
+    }
+
+    // Tap anywhere on stage to skip
+    if (animationView) {
+        animationView.addEventListener('click', () => {
+            if (isAnimationActive) {
+                finishAndShowCertificate();
+            }
+        });
+    }
+
+    // Start playful achievement animation
+    function startAchievementAnimation() {
+        resetAchievementStage();
+        isAnimationActive = true;
+        btnGenerate.disabled = true;
+        btnGenerate.style.pointerEvents = 'none';
+
+        // Check prefers-reduced-motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            showView(animationView);
+            animTimeouts.push(setTimeout(finishAndShowCertificate, 250));
+            return;
+        }
+
+        // Show animation view
+        showView(animationView);
+
+        // Sequence Step 1: Transition in (0 - 0.4s)
+        // Blank cream paper sheet floats up into exact center with 3D tilt
+        animTimeouts.push(setTimeout(() => {
+            if (!isAnimationActive) return;
+            paperSheet.classList.add('float-in');
+        }, 50));
+
+        // SVG lines setup
+        const sigLength = signaturePath ? signaturePath.getTotalLength() : 250;
+        if (signaturePath) {
+            signaturePath.style.strokeDasharray = `${sigLength}`;
+            signaturePath.style.strokeDashoffset = `${sigLength}`;
+        }
+        if (lineTitle) {
+            lineTitle.style.strokeDasharray = '140';
+            lineTitle.style.strokeDashoffset = '140';
+        }
+        if (lineSub) {
+            lineSub.style.strokeDasharray = '80';
+            lineSub.style.strokeDashoffset = '80';
+        }
+
+        const animStartTime = performance.now();
+
+        // 60fps RAF loop for pen movement & writing (Steps 2 & 3: 0.35s - 2.5s)
+        function animatePenFrame(currentTime) {
+            if (!isAnimationActive) return;
+
+            const elapsed = (currentTime - animStartTime) / 1000; // in seconds
+
+            if (elapsed < 0.35) {
+                // Waiting for paper float-in
+                penContainer.style.opacity = '0';
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Step 2: Pen Entrance (0.35s - 0.85s)
+            if (elapsed >= 0.35 && elapsed < 0.85) {
+                penContainer.style.opacity = '1';
+                const p = (elapsed - 0.35) / 0.50; // 0 to 1
+                const ease = 1 - Math.pow(1 - p, 3);
+                const wobble = Math.sin(p * Math.PI * 3) * 3 * (1 - p);
+                
+                // Glide from top-right (440, -40) to Title line start (130, 56)
+                const curX = 440 + (130 - 440) * ease;
+                const curY = -40 + (56 - (-40)) * ease;
+                const rot = 28 + (-16 - 28) * ease + wobble;
+                
+                setPenPosition(curX, curY, rot);
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Step 3a: Draw Title line (0.85s - 1.05s)
+            if (elapsed >= 0.85 && elapsed < 1.05) {
+                penContainer.style.opacity = '1';
+                const p = (elapsed - 0.85) / 0.20;
+                const curX = 130 + (270 - 130) * p;
+                const curY = 56;
+                const rot = -16 + Math.sin(p * 20) * 2;
+                
+                setPenPosition(curX, curY, rot);
+                if (lineTitle) {
+                    lineTitle.style.strokeDashoffset = `${140 * (1 - p)}`;
+                }
+                const drawnIcon = document.querySelector('.drawn-icon');
+                if (drawnIcon) drawnIcon.classList.add('drawn');
+                
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Step 3b Glide: Lift and glide to Subtitle line (1.05s - 1.15s)
+            if (elapsed >= 1.05 && elapsed < 1.15) {
+                penContainer.style.opacity = '1';
+                if (lineTitle) lineTitle.style.strokeDashoffset = '0';
+                const p = (elapsed - 1.05) / 0.10;
+                // Arc from (270, 56) to (160, 70)
+                const curX = 270 + (160 - 270) * p;
+                const curY = 56 + (70 - 56) * p - Math.sin(p * Math.PI) * 6; // slight lift arc
+                const rot = -10 + Math.sin(p * Math.PI) * 4;
+                setPenPosition(curX, curY, rot);
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Step 3b: Draw Subtitle line (1.15s - 1.30s)
+            if (elapsed >= 1.15 && elapsed < 1.30) {
+                penContainer.style.opacity = '1';
+                const p = (elapsed - 1.15) / 0.15;
+                const curX = 160 + (240 - 160) * p;
+                const curY = 70;
+                const rot = -14 + Math.sin(p * 18) * 2;
+                
+                setPenPosition(curX, curY, rot);
+                if (lineSub) {
+                    lineSub.style.strokeDashoffset = `${80 * (1 - p)}`;
+                }
+                if (lineBody1) lineBody1.style.opacity = `${p * 0.7}`;
+                if (lineBody2) lineBody2.style.opacity = `${p * 0.7}`;
+                
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Step 3c Glide: Lift and glide to Signature Start (1.30s - 1.45s)
+            if (elapsed >= 1.30 && elapsed < 1.45) {
+                penContainer.style.opacity = '1';
+                if (lineSub) lineSub.style.strokeDashoffset = '0';
+                if (lineBody1) lineBody1.style.opacity = '0.7';
+                if (lineBody2) lineBody2.style.opacity = '0.7';
+
+                const p = (elapsed - 1.30) / 0.15;
+                // Arc from (240, 70) to signature start (230, 174)
+                const curX = 240 + (230 - 240) * p;
+                const curY = 70 + (174 - 70) * p - Math.sin(p * Math.PI) * 10;
+                const rot = -12 + ( -18 - (-12) ) * p;
+                setPenPosition(curX, curY, rot);
+
+                if (lineSig) lineSig.style.opacity = `${p * 0.7}`;
+                if (lineSigSub) lineSigSub.style.opacity = `${p * 0.7}`;
+
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Step 3c: Writing Cursive Signature (1.45s - 2.20s)
+            if (elapsed >= 1.45 && elapsed < 2.20) {
+                penContainer.style.opacity = '1';
+                if (lineSig) lineSig.style.opacity = '0.7';
+                if (lineSigSub) lineSigSub.style.opacity = '0.7';
+
+                const p = (elapsed - 1.45) / 0.75; // 0 to 1
+                const clampedP = Math.min(1, Math.max(0, p));
+                
+                // Exact stroke drawing and pen tracking
+                const curOffset = sigLength * (1 - clampedP);
+                if (signaturePath) {
+                    signaturePath.style.strokeDashoffset = `${curOffset}`;
+                    const pt = signaturePath.getPointAtLength(clampedP * sigLength);
+                    const rot = -18 + Math.sin(clampedP * 28) * 3.5;
+                    setPenPosition(pt.x, pt.y, rot);
+                }
+
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Step 3d: Gentle flourish scribble if certificate is still processing (no spinner!)
+            if (elapsed >= 2.20 && !isCertReady) {
+                penContainer.style.opacity = '1';
+                if (signaturePath) signaturePath.style.strokeDashoffset = '0';
+                const scribbleP = elapsed - 2.20;
+                const curX = 335 + Math.sin(scribbleP * 12) * 8;
+                const curY = 182 + Math.cos(scribbleP * 12) * 2;
+                const rot = -18 + Math.sin(scribbleP * 12) * 3;
+                setPenPosition(curX, curY, rot);
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Step 4: Pen flourish lift & exit (2.20s - 2.45s)
+            if (elapsed >= 2.20 && elapsed < 2.45) {
+                if (signaturePath) signaturePath.style.strokeDashoffset = '0';
+                const p = (elapsed - 2.20) / 0.25;
+                const ease = Math.pow(p, 2); // accelerate out
+                
+                // Lift from flourish end (335, 182) to top right (450, -50)
+                const curX = 335 + (450 - 335) * ease;
+                const curY = 182 + (-50 - 182) * ease;
+                const rot = -18 + (25 - (-18)) * ease;
+                penContainer.style.opacity = `${Math.max(0, 1 - ease * 1.2)}`;
+                
+                setPenPosition(curX, curY, rot);
+                animFrameId = requestAnimationFrame(animatePenFrame);
+                return;
+            }
+
+            // Pen has fully exited
+            penContainer.style.opacity = '0';
+        }
+
+        animFrameId = requestAnimationFrame(animatePenFrame);
+
+        // Sequence Step 5: Seal Stamp (2.5s - 3.0s)
+        animTimeouts.push(setTimeout(() => {
+            if (!isAnimationActive) return;
+            goldSeal.classList.add('stamped');
+        }, 2500));
+
+        // Impact bounce & ripple (at 2.68s)
+        animTimeouts.push(setTimeout(() => {
+            if (!isAnimationActive) return;
+            paperSheet.classList.add('stamp-impact');
+            sealRipple.classList.add('active');
+        }, 2680));
+
+        // Sequence Step 6: Achievement Burst (3.0s - 3.6s)
+        animTimeouts.push(setTimeout(() => {
+            if (!isAnimationActive) return;
+            achievementBadge.classList.add('badge-visible');
+            sparklesContainer.classList.add('sparkles-active');
+
+            // Gold and festive confetti pop
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 50,
+                    spread: 68,
+                    origin: { y: 0.56 },
+                    colors: ['#f59e0b', '#fbbf24', '#fde68a', '#10b981', '#3b82f6', '#ec4899'],
+                    ticks: 180,
+                    gravity: 1.15
+                });
+            }
+        }, 3000));
+
+        // Sequence Step 7: Transform and reveal (3.6s - 4.1s)
+        // Soft glint sweep across paper
+        animTimeouts.push(setTimeout(() => {
+            if (!isAnimationActive) return;
+            paperGlint.classList.add('sweep');
+        }, 3550));
+
+        // Paper scales up and cross-fades
+        animTimeouts.push(setTimeout(() => {
+            if (!isAnimationActive) return;
+            paperSheet.classList.add('transform-out');
+        }, 3750));
+
+        // Complete: Transition to Real Certificate
+        animTimeouts.push(setTimeout(() => {
+            if (!isAnimationActive) return;
+            finishAndShowCertificate();
+        }, 4050));
+    }
+
     // Generate Click
     btnGenerate.addEventListener('click', () => {
         const name = recipientNameInput.value.trim();
@@ -166,20 +553,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pre-adjust text sizes while hidden
         adjustNameSize();
         
-        // Switch to Loading View
-        showView(animationView);
-        
-        // Simulate Generation Process
-        setTimeout(() => { loadingText.textContent = "স্বাক্ষর যুক্ত করা হচ্ছে..."; }, 1200);
-        setTimeout(() => { loadingText.textContent = "লেআউট চূড়ান্ত করা হচ্ছে..."; }, 2400);
-        
-        // Transition to Result View
-        setTimeout(() => {
-            showView(resultView);
-            // Must calculate text sizes and scaling after the element is visible
-            adjustNameSize();
-            scaleCertificate();
-        }, 3600);
+        // Background certificate ready check
+        isCertReady = false;
+        document.fonts.ready.then(() => {
+            isCertReady = true;
+        }).catch(() => {
+            isCertReady = true;
+        });
+
+        // Launch playful achievement animation
+        startAchievementAnimation();
     });
 
     // ----------------------------------------------------
@@ -281,8 +664,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset Flow
     btnReset.addEventListener('click', () => {
         recipientNameInput.value = '';
-        loadingText.textContent = "সার্টিফিকেট তৈরি করা হচ্ছে...";
         exportMsg.textContent = '';
+        resetAchievementStage();
         updateKeyboardState(false, 0);
         showView(landingView);
     });
