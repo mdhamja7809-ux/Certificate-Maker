@@ -51,15 +51,27 @@ document.addEventListener('DOMContentLoaded', () => {
         previewSignerTitle.textContent = CONFIG.signerTitle;
     }
 
-    // Auto-shrink recipient name if it's too long
+    // Auto-shrink recipient name (allows up to 2 lines) and signature (strictly 1 line)
     function adjustNameSize() {
+        // 1. Recipient Name: can wrap up to 2 lines, bounded to 700px width and 135px height
         let fontSize = 76; // Default max size in pixels
         previewName.style.fontSize = fontSize + 'px';
-        const maxWidth = 850; 
+        const maxWidth = 700;
+        const maxHeight = 135;
         
-        while (previewName.scrollWidth > maxWidth && fontSize > 28) {
+        while ((previewName.scrollWidth > maxWidth || previewName.scrollHeight > maxHeight) && fontSize > 26) {
             fontSize -= 2;
             previewName.style.fontSize = fontSize + 'px';
+        }
+
+        // 2. Signature: must stay on a single line (never wrap) and scale down to fit the signature line
+        let sigFontSize = 50; // Default signature size in pixels
+        previewSignature.style.fontSize = sigFontSize + 'px';
+        const maxSigWidth = 300;
+
+        while (previewSignature.scrollWidth > maxSigWidth && sigFontSize > 20) {
+            sigFontSize -= 2;
+            previewSignature.style.fontSize = sigFontSize + 'px';
         }
     }
 
@@ -165,7 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Transition to Result View
         setTimeout(() => {
             showView(resultView);
-            // Must calculate scaling after the element is visible
+            // Must calculate text sizes and scaling after the element is visible
+            adjustNameSize();
             scaleCertificate();
         }, 3600);
     });

@@ -593,7 +593,11 @@ body {
   left: 692px;
   transform: translate(-50%, -50%);
   margin: 0;
-  height: auto;
+  width: 700px;
+  max-width: 700px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .cert-recipient-container h2 {
@@ -602,8 +606,12 @@ body {
   font-size: 76px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  padding: 0 40px 5px;
-  white-space: nowrap;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  line-height: 1.15;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .cert-course h4 {
@@ -649,6 +657,7 @@ body {
   top: 535px;
   left: 897px;
   transform: translate(-50%, -100%);
+  white-space: nowrap;
 }
 
 .line {
