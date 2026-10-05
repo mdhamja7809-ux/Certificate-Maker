@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGenerate = document.getElementById('btnGenerate');
     const btnReset = document.getElementById('btnReset');
     const btnPng = document.getElementById('btnPng');
-    const btnPdf = document.getElementById('btnPdf');
     const landingError = document.getElementById('landing-error');
     const exportMsg = document.getElementById('export-msg');
     const loadingText = document.getElementById('loading-text');
@@ -296,9 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ----------------------------------------------------
-    // Export Logic (PNG & PDF)
+    // Export Logic (Image / PNG)
     // ----------------------------------------------------
-    async function exportCertificate(type) {
+    async function exportCertificate() {
         const name = recipientNameInput.value.trim() || 'Certificate';
         
         // Wait for all fonts to be fully loaded
@@ -318,9 +317,8 @@ document.addEventListener('DOMContentLoaded', () => {
             wrapper.style.overflow = 'visible';
         }
 
-        const originalBtnText = type === 'png' ? btnPng.innerText : btnPdf.innerText;
-        if (type === 'png') btnPng.innerText = 'ডাউনলোড হচ্ছে...';
-        else btnPdf.innerText = 'ডাউনলোড হচ্ছে...';
+        const originalBtnText = btnPng.innerText;
+        btnPng.innerText = 'ডাউনলোড হচ্ছে...';
 
         try {
             const canvas = await html2canvas(certElement, {
@@ -342,23 +340,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const safeName = name.replace(/[^a-zA-Z0-9\u0980-\u09FF_-]/g, '_').toLowerCase();
             const fileName = `certificate_${safeName}`;
 
-            if (type === 'png') {
-                const link = document.createElement('a');
-                link.download = `${fileName}.png`;
-                link.href = imgData;
-                link.click();
-            } else if (type === 'pdf') {
-                const { jsPDF } = window.jspdf;
-                // Create PDF with exact dimensions of the image to avoid stretching
-                const pdf = new jsPDF({
-                    orientation: 'landscape',
-                    unit: 'px',
-                    format: [1280, 720]
-                });
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, 1280, 720);
-                pdf.save(`${fileName}.pdf`);
-            }
+            const link = document.createElement('a');
+            link.download = `${fileName}.png`;
+            link.href = imgData;
+            link.click();
         } catch (err) {
             console.error("Export Error: ", err);
             exportMsg.textContent = 'সার্টিফিকেট ডাউনলোড করার সময় একটি সমস্যা হয়েছে।';
@@ -368,11 +353,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 wrapper.style.height = origWrapHeight;
                 wrapper.style.overflow = origWrapOverflow;
             }
-            if (type === 'png') btnPng.innerText = originalBtnText;
-            else btnPdf.innerText = originalBtnText;
+            btnPng.innerText = originalBtnText;
         }
     }
 
-    btnPng.addEventListener('click', () => exportCertificate('png'));
-    btnPdf.addEventListener('click', () => exportCertificate('pdf'));
+    btnPng.addEventListener('click', exportCertificate);
 });
