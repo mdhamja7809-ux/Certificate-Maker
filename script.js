@@ -827,50 +827,59 @@ document.addEventListener('DOMContentLoaded', () => {
             const fileName = `certificate_${safeName}.png`;
 
             // Detect Messenger, Facebook, Instagram, or other in-app WebViews
-            const isMessengerOrIAB = /FBAN|FBAV|Messenger|FB_IAB|Instagram|Line|IAB/i.test(navigator.userAgent || '');
+            const ua = navigator.userAgent || '';
+            const isMessengerOrIAB = /FBAN|FBAV|Messenger|FB_IAB|Instagram|Line/i.test(ua);
 
-            // Convert canvas to Blob for modern Web Share API & Files
+            // Convert canvas to Blob for reliable downloads and files
             canvas.toBlob(async (blob) => {
                 if (!blob) {
                     exportMsg.textContent = 'ছবি তৈরিতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
                     return;
                 }
 
-                const file = new File([blob], fileName, { type: 'image/png' });
-
-                // Option A: Try native Web Share API (Save to Gallery / Photos)
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: 'সার্টিফিকেট',
-                            text: 'সার্টিক্রাফট সার্টিফিকেট'
-                        });
-                        return; // Successfully presented native save/share sheet
-                    } catch (shareErr) {
-                        if (shareErr.name === 'AbortError') {
-                            // User simply closed the share sheet
+                // ----------------------------------------------------
+                // CASE 1: In-App Browser (Messenger / Facebook / Instagram)
+                // Direct download is blocked by Meta WebView, so we provide Save Modal / Share
+                // ----------------------------------------------------
+                if (isMessengerOrIAB) {
+                    const file = new File([blob], fileName, { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'সার্টিফিকেট',
+                                text: 'সার্টিক্রাফট সার্টিফিকেট'
+                            });
                             return;
+                        } catch (shareErr) {
+                            if (shareErr.name === 'AbortError') return;
                         }
                     }
-                }
-
-                // Option B: If inside Messenger / In-App Browser, direct <a download> is blocked by WebView
-                if (isMessengerOrIAB) {
                     openSaveModal(imgData, blob, fileName);
                     return;
                 }
 
-                // Option C: Regular Desktop or standard Mobile Browser (Chrome/Safari/Firefox)
+                // ----------------------------------------------------
+                // CASE 2: Standard Browser (Chrome on phone, Chrome on PC, Safari, Firefox, Edge)
+                // DIRECT DOWNLOAD to device Downloads folder (NO share sheet popup)
+                // ----------------------------------------------------
                 try {
+                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = fileName;
+                    link.href = blobUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+                } catch (dlErr) {
+                    // Fallback to data URL
                     const link = document.createElement('a');
                     link.download = fileName;
                     link.href = imgData;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                } catch (dlErr) {
-                    openSaveModal(imgData, blob, fileName);
                 }
             }, 'image/png');
 
