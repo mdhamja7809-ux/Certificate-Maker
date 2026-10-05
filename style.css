@@ -741,6 +741,62 @@ body {
     font-size: 1rem;
   }
 
+  /* Mobile virtual keyboard active state:
+     Compacts the card so the button remains comfortably visible above the keyboard */
+  #landing-view.keyboard-open {
+    justify-content: flex-start;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  #landing-view.keyboard-open .landing-card {
+    padding: 14px 18px;
+    margin: 0 auto;
+  }
+
+  #landing-view.keyboard-open .brand {
+    margin-bottom: 6px;
+    gap: 6px;
+  }
+
+  #landing-view.keyboard-open .brand-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+  }
+
+  #landing-view.keyboard-open .brand h1 {
+    font-size: 1.1rem;
+  }
+
+  #landing-view.keyboard-open .landing-card h2 {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+  }
+
+  #landing-view.keyboard-open .landing-card .subtitle {
+    display: none; /* Hide descriptive text while typing to preserve screen space */
+  }
+
+  #landing-view.keyboard-open .input-group {
+    margin-bottom: 10px;
+  }
+
+  #landing-view.keyboard-open .input-group label {
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+  }
+
+  #landing-view.keyboard-open .input-group input {
+    padding: 10px 12px;
+  }
+
+  #landing-view.keyboard-open .btn-large {
+    min-height: 44px;
+    padding: 10px 18px 12px;
+    font-size: 0.95rem;
+  }
+
   .result-header {
     padding: 10px 16px;
     gap: 8px;

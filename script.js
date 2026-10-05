@@ -183,11 +183,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3600);
     });
 
+    // ----------------------------------------------------
+    // Mobile Virtual Keyboard Interactive Logic
+    // Keeps the Generate button visible when soft keyboard opens
+    // ----------------------------------------------------
+    let isKeyboardOpen = false;
+
+    function setKeyboardOpen(open) {
+        if (window.innerWidth > 768) return;
+
+        if (open) {
+            if (!landingView.classList.contains('active')) return;
+            if (!isKeyboardOpen) {
+                isKeyboardOpen = true;
+                landingView.classList.add('keyboard-open');
+                setTimeout(() => {
+                    btnGenerate.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
+        } else {
+            isKeyboardOpen = false;
+            landingView.classList.remove('keyboard-open');
+        }
+    }
+
+    if (window.visualViewport) {
+        let initialViewportHeight = window.visualViewport.height;
+        window.visualViewport.addEventListener('resize', () => {
+            if (window.innerWidth > 768) return;
+            const currentHeight = window.visualViewport.height;
+            // Detect significant viewport shrinkage indicating software keyboard
+            if (currentHeight < initialViewportHeight - 120 || currentHeight < window.innerHeight * 0.78) {
+                setKeyboardOpen(true);
+            } else {
+                setKeyboardOpen(false);
+                initialViewportHeight = currentHeight;
+            }
+        });
+    }
+
+    // Direct focus / blur handlers for cross-browser mobile support
+    recipientNameInput.addEventListener('focus', () => {
+        setKeyboardOpen(true);
+    });
+
+    recipientNameInput.addEventListener('blur', () => {
+        // Small delay to allow direct button tap to register
+        setTimeout(() => {
+            setKeyboardOpen(false);
+        }, 200);
+    });
+
     // Reset Flow
     btnReset.addEventListener('click', () => {
         recipientNameInput.value = '';
         loadingText.textContent = "সার্টিফিকেট তৈরি করা হচ্ছে...";
         exportMsg.textContent = '';
+        setKeyboardOpen(false);
         showView(landingView);
     });
 
