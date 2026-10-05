@@ -287,16 +287,37 @@ body {
    4. Screen 1: Landing
    ================================== */
 #landing-view {
+  position: relative;
   align-items: center;
   justify-content: center;
   padding: 48px 20px;
-  /* light background with a very faint red glow at the top */
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(244, 63, 94, 0.07), transparent 70%),
-    var(--bg);
+  background-color: var(--bg);
+  min-height: 100dvh;
+  transition: background-color 0.35s ease;
+}
+
+/* Background ambient decoration that softly dims in focus mode */
+#landing-view::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(244, 63, 94, 0.08), transparent 70%);
+  opacity: 1;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+body.keyboard-open #landing-view::before {
+  opacity: 0.2;
+}
+
+body.keyboard-open #landing-view {
+  background-color: #f1f5f9;
 }
 
 .landing-card {
+  position: relative;
+  z-index: 1;
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
@@ -305,6 +326,16 @@ body {
   max-width: 480px;
   width: 100%;
   text-align: center;
+  will-change: transform;
+  transform: translateY(0) scale(1);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Logo & Brand in card header */
+.landing-card .brand {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+  transform-origin: center top;
 }
 
 .landing-card h2 {
@@ -314,6 +345,7 @@ body {
   letter-spacing: -0.02em;
   line-height: 1.25;
   margin-bottom: 10px;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .landing-card .subtitle {
@@ -321,11 +353,13 @@ body {
   font-size: 0.95rem;
   line-height: 1.6;
   margin-bottom: 28px;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
 }
 
 .input-group {
   text-align: left;
   margin-bottom: 16px;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
 }
 
 .input-group label {
@@ -345,7 +379,7 @@ body {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 10px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
 }
 
 .input-group input::placeholder {
@@ -356,11 +390,11 @@ body {
   border-color: #d1d5db;
 }
 
-/* Focus: 2px accent border (1px border + 1px shadow) and a soft glow */
+/* Focus: smooth glowing accent border and ring */
 .input-group input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 0 0 5px rgba(244, 63, 94, 0.12);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 0 5px rgba(244, 63, 94, 0.16), 0 6px 16px rgba(244, 63, 94, 0.08);
 }
 
 .input-group .error-msg {
@@ -741,60 +775,33 @@ body {
     font-size: 1rem;
   }
 
-  /* Mobile virtual keyboard active state:
-     Compacts the card so the button remains comfortably visible above the keyboard */
-  #landing-view.keyboard-open {
-    justify-content: flex-start;
-    padding-top: 10px;
-    padding-bottom: 10px;
+  /* Focus Mode: when keyboard opens on mobile, glide card upward smoothly */
+  body.keyboard-open .landing-card {
+    transform: translateY(var(--card-shift, -60px)) scale(1.02);
+    box-shadow: 0 16px 40px rgba(16, 24, 40, 0.14), 0 4px 16px rgba(244, 63, 94, 0.08);
   }
 
-  #landing-view.keyboard-open .landing-card {
-    padding: 14px 18px;
-    margin: 0 auto;
+  body.keyboard-open .landing-card .brand {
+    transform: scale(0.85);
+    opacity: 0.6;
   }
 
-  #landing-view.keyboard-open .brand {
-    margin-bottom: 6px;
-    gap: 6px;
+  /* Staggered slide-up for form elements */
+  body.keyboard-open .input-group {
+    transform: translateY(-4px);
+    transition-delay: 60ms;
   }
 
-  #landing-view.keyboard-open .brand-icon {
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
+  body.keyboard-open .landing-card .btn-cta {
+    transform: translateY(-4px);
+    transition-delay: 120ms;
   }
 
-  #landing-view.keyboard-open .brand h1 {
-    font-size: 1.1rem;
-  }
-
-  #landing-view.keyboard-open .landing-card h2 {
-    font-size: 1.2rem;
-    margin-bottom: 4px;
-  }
-
-  #landing-view.keyboard-open .landing-card .subtitle {
-    display: none; /* Hide descriptive text while typing to preserve screen space */
-  }
-
-  #landing-view.keyboard-open .input-group {
-    margin-bottom: 10px;
-  }
-
-  #landing-view.keyboard-open .input-group label {
-    font-size: 0.8rem;
-    margin-bottom: 3px;
-  }
-
-  #landing-view.keyboard-open .input-group input {
-    padding: 10px 12px;
-  }
-
-  #landing-view.keyboard-open .btn-large {
-    min-height: 44px;
-    padding: 10px 18px 12px;
-    font-size: 0.95rem;
+  /* Reversal without delay on keyboard close */
+  body:not(.keyboard-open) .input-group,
+  body:not(.keyboard-open) .landing-card .btn-cta {
+    transform: translateY(0);
+    transition-delay: 0s;
   }
 
   .result-header {
@@ -968,5 +975,23 @@ body {
     width: auto;
     flex: 1;
     min-height: 44px;
+  }
+}
+
+/* ==================================
+   Accessibility: prefers-reduced-motion
+   ================================== */
+@media (prefers-reduced-motion: reduce) {
+  .landing-card,
+  .landing-card .brand,
+  .landing-card h2,
+  .landing-card .subtitle,
+  .input-group,
+  .landing-card .btn-cta,
+  #landing-view,
+  #landing-view::before {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    animation-duration: 0.01ms !important;
   }
 }

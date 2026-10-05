@@ -184,54 +184,99 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ----------------------------------------------------
-    // Mobile Virtual Keyboard Interactive Logic
-    // Keeps the Generate button visible when soft keyboard opens
+    // Keyboard Focus Mode Animation & Detection
     // ----------------------------------------------------
-    let isKeyboardOpen = false;
+    const rootElement = document.documentElement;
+    const landingCard = document.querySelector('.landing-card');
+    let isKeyboardActive = false;
+    let baseWindowHeight = window.innerHeight;
 
-    function setKeyboardOpen(open) {
-        if (window.innerWidth > 768) return;
+    // Smoothly updates focus mode state and calculates card translateY
+    function updateKeyboardState(isOpen, keyboardHeight = 0) {
+        if (!landingView.classList.contains('active') && isOpen) return;
+        
+        // Never affect desktop screens wider than 768px
+        if (window.innerWidth > 768) {
+            document.body.classList.remove('keyboard-open');
+            rootElement.style.removeProperty('--kb-height');
+            rootElement.style.removeProperty('--card-shift');
+            isKeyboardActive = false;
+            return;
+        }
 
-        if (open) {
-            if (!landingView.classList.contains('active')) return;
-            if (!isKeyboardOpen) {
-                isKeyboardOpen = true;
-                landingView.classList.add('keyboard-open');
-                setTimeout(() => {
-                    btnGenerate.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }, 100);
+        if (isOpen) {
+            isKeyboardActive = true;
+            document.body.classList.add('keyboard-open');
+            rootElement.style.setProperty('--kb-height', `${Math.round(keyboardHeight)}px`);
+
+            // Calculate precise translateY using transform only
+            if (landingCard) {
+                const cardRect = landingCard.getBoundingClientRect();
+                const viewportH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                // Visible area takes keyboard height into account
+                const visibleHeight = keyboardHeight > 0 
+                    ? Math.min(viewportH, window.innerHeight - keyboardHeight)
+                    : viewportH;
+                
+                // Normal unshifted top position relative to current window
+                const unshiftedTop = (window.innerHeight - cardRect.height) / 2;
+                // Ideal centered top position within the remaining visible space
+                const idealTop = cardRect.height < visibleHeight 
+                    ? Math.max(16, (visibleHeight - cardRect.height) / 2)
+                    : 12;
+                
+                const shiftY = Math.max(0, unshiftedTop - idealTop);
+                rootElement.style.setProperty('--card-shift', `-${Math.round(shiftY)}px`);
             }
         } else {
-            isKeyboardOpen = false;
-            landingView.classList.remove('keyboard-open');
+            isKeyboardActive = false;
+            document.body.classList.remove('keyboard-open');
+            rootElement.style.setProperty('--kb-height', '0px');
+            rootElement.style.setProperty('--card-shift', '0px');
+        }
+    }
+
+    // Check keyboard open/close via visualViewport API (resize and scroll)
+    function checkVisualViewport() {
+        if (!window.visualViewport) return;
+        const currentHeight = window.visualViewport.height;
+        const diff = Math.max(0, baseWindowHeight - currentHeight);
+
+        // A height difference > 100px reliably detects soft keyboard on mobile
+        if (diff > 100) {
+            updateKeyboardState(true, diff);
+        } else {
+            // Update base height when keyboard is closed (handles screen rotation)
+            baseWindowHeight = window.innerHeight;
+            if (document.activeElement !== recipientNameInput) {
+                updateKeyboardState(false, 0);
+            }
         }
     }
 
     if (window.visualViewport) {
-        let initialViewportHeight = window.visualViewport.height;
-        window.visualViewport.addEventListener('resize', () => {
-            if (window.innerWidth > 768) return;
-            const currentHeight = window.visualViewport.height;
-            // Detect significant viewport shrinkage indicating software keyboard
-            if (currentHeight < initialViewportHeight - 120 || currentHeight < window.innerHeight * 0.78) {
-                setKeyboardOpen(true);
-            } else {
-                setKeyboardOpen(false);
-                initialViewportHeight = currentHeight;
-            }
-        });
+        window.visualViewport.addEventListener('resize', checkVisualViewport);
+        window.visualViewport.addEventListener('scroll', checkVisualViewport);
     }
 
-    // Direct focus / blur handlers for cross-browser mobile support
-    recipientNameInput.addEventListener('focus', () => {
-        setKeyboardOpen(true);
+    // Fallback detection using focusin and focusout on input
+    recipientNameInput.addEventListener('focusin', () => {
+        if (window.innerWidth <= 768) {
+            const currentDiff = window.visualViewport 
+                ? (baseWindowHeight - window.visualViewport.height) 
+                : 0;
+            const estimatedKbHeight = currentDiff > 100 ? currentDiff : 280;
+            updateKeyboardState(true, estimatedKbHeight);
+        }
     });
 
-    recipientNameInput.addEventListener('blur', () => {
-        // Small delay to allow direct button tap to register
+    recipientNameInput.addEventListener('focusout', () => {
+        // Delay closing so direct clicks on "Generate" button register cleanly first
         setTimeout(() => {
-            setKeyboardOpen(false);
-        }, 200);
+            if (document.activeElement !== recipientNameInput) {
+                updateKeyboardState(false, 0);
+            }
+        }, 150);
     });
 
     // Reset Flow
@@ -239,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
         recipientNameInput.value = '';
         loadingText.textContent = "সার্টিফিকেট তৈরি করা হচ্ছে...";
         exportMsg.textContent = '';
-        setKeyboardOpen(false);
+        updateKeyboardState(false, 0);
         showView(landingView);
     });
 
